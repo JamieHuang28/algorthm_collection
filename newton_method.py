@@ -49,14 +49,14 @@ class QuadFunc:
         return np.array([2 * a for a in x])
 
     def partial2(self, x: np.array):
-        return np.ones(np.shape(x)) * 2.0
+        return np.eye(np.shape(x)[0]) * 2.0
 
 def newtons_method(func : QuadFunc, initial_guess: np.array, tolerance=1e-7, max_iterations=1000):
     x_n = initial_guess
     for iter in range(max_iterations):
         g = func.partial(x_n)
         H = func.partial2(x_n)
-        d_x = - g / H
+        d_x = - np.linalg.inv(H).dot(g)
         print(f"{iter}: d_x = {d_x}")
         if abs(np.linalg.norm(func.partial(x_n))) < tolerance:
             print(f"found at {x_n}, value = {func.eval(x_n)} , iter = {iter}")
@@ -103,10 +103,10 @@ def NewtonsMethod(problem : ProblemInterface, tolerance=1e-7, max_iterations=100
             x_n = problem.x_n
             print(f"found at {x_n}, value = {problem.eval()} , iter = {iter}")
             return x_n
-        d_x = -problem.grad() / problem.hessian()
+        d_x = - np.linalg.inv(problem.hessian()).dot(problem.grad())
         problem.update_x(d_x)
     
-    print(f"maximum reached at {x_n}, value = {problem.eval(x_n)}")
+    print(f"maximum reached at {problem.x_n}, value = {problem.eval()}")
     return problem.x_n
 
 class QuadProblem(ProblemInterface):
@@ -127,15 +127,36 @@ class QuadProblem(ProblemInterface):
         self.x_n = self.x_n + d_x
 
 
-def example3():
+def exampleNewtons():
     problem = QuadProblem(np.array([1.0, 2.0]))
     print(problem.eval())
     print(problem.grad())
     print(problem.hessian())
+    print(np.linalg.inv(problem.hessian()))
     print(problem.x_n)
     print(problem.update_x(np.ones(2)))
+    print(problem.x_n)
     NewtonsMethod(problem)
+
+def GradDescent(problem: ProblemInterface, step, tolerance=1e-7, max_iterations=1000):
+    for iter in range(max_iterations):
+        grad = problem.grad()
+        print(f"{iter}: grad = {grad}")
+        print(f"x_n = {problem.x_n}")
+        if abs(np.linalg.norm(problem.grad())) < tolerance:
+            x_n = problem.x_n
+            print(f"found at {x_n}, value = {problem.eval()} , iter = {iter}")
+            return x_n
+        d_x = -problem.grad() * step
+        problem.update_x(d_x)
+    
+    print(f"maximum reached at {problem.x_n}, value = {problem.eval()}")
+    return problem.x_n
+
+def exampleGradDescent():
+    problem = QuadProblem(np.array([1.0, 2.0]))
+    GradDescent(problem, 1e-1)
     
 if __name__ == "__main__":
-    example3()
+    exampleNewtons()
         
