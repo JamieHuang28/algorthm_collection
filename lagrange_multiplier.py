@@ -28,7 +28,7 @@ class EqConstraint:
         self.y = y
     
     def __repr__(self) -> str:
-        return "EqConstraint(X)"
+        return "EqConstraint(x^2-3=0)"
     
     def eval(self):
         return self.x**2*self.y -3
@@ -92,7 +92,7 @@ class Problem(ProblemInterface):
         self.lamb = lamb
     
     def __repr__(self) -> str:
-        return self.object_func.__repr__() + "lamb*"+self.eq_constr.__repr__()
+        return self.object_func.__repr__() +"+ lambda("+str(self.lamb)+")*"+self.eq_constr.__repr__()
     
     def eval(self):
         return self.object_func.eval() + self.lamb*self.eq_constr.eval()
