@@ -100,19 +100,21 @@ def NewtonsMethod(problem : ProblemInterface, tolerance=1e-7, max_iterations=100
         grad = problem.grad()
         print(f"{iter}: grad = {grad}")
         if abs(np.linalg.norm(problem.grad())) < tolerance:
-            x_n = problem.x_n
-            print(f"found at {x_n}, value = {problem.eval()} , iter = {iter}")
-            return x_n
+            print(f"found at {problem}, value = {problem.eval()} , iter = {iter}")
+            return problem.__repr__
         d_x = - np.linalg.inv(problem.hessian()).dot(problem.grad())
         problem.update_x(d_x)
     
-    print(f"maximum reached at {problem.x_n}, value = {problem.eval()}")
-    return problem.x_n
+    print(f"maximum reached at {problem}, value = {problem.eval()}")
+    return problem.__repr__
 
 class QuadProblem(ProblemInterface):
     def __init__(self, initial_guess: np.array):
         self.x_n = initial_guess
         self.func = QuadFunc()
+    
+    def __repr__(self) -> str:
+        return self.x_n.__repr__()
     
     def eval(self):
         return self.func.eval(self.x_n)
