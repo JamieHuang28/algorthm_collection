@@ -4,7 +4,8 @@ from lagrange_multiplier import Problem, LagrangeMultiplier
 import numpy as np
 
 class UneqConstraint(ProblemInterface):
-    def __init__(self, x, y):
+    def __init__(self, initial_guess: np.array):
+        x, y = initial_guess[0:2]
         self.x = x
         self.y = y
     
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     partial_h(x, y) / partial_x = -1
     partial_h(x, y) / partial_y = 1
     """
-    pb_kkt = LagrangeMultiplier(Problem(1.0, 1.0, 1.0), UneqConstraint(1.0, 1.0), 1.0, True)
+    pb_kkt = LagrangeMultiplier(Problem, UneqConstraint, np.ones(4), True)
     print(pb_kkt.eval())
     print(pb_kkt.grad())
     print(pb_kkt.hessian())

@@ -1,13 +1,14 @@
 from newton_method import ProblemInterface, NewtonsMethod, GradDescent
 import numpy as np
 
-class ObjectFunction:
-    def __init__(self, x = 0.0, y = 0.0):
+class FunctionQuadratic(ProblemInterface):
+    def __init__(self, initial_guess: np.array):
+        x, y = initial_guess[0:2]
         self.x = x
         self.y = y
     
     def __repr__(self) -> str:
-        return "ObjectFunction("+str(self.x)+", "+str(self.y)+")"
+        return "FunctionQuadratic("+str(self.x)+", "+str(self.y)+")"
 
     def eval(self):
         return self.x**2 + self.y**2
@@ -22,8 +23,9 @@ class ObjectFunction:
         self.x += d_x[0]
         self.y += d_x[1]
 
-class EqConstraint:
-    def __init__(self, x = 0.0, y = 0.0):
+class EqConstraint(ProblemInterface):
+    def __init__(self, initial_guess: np.array):
+        x, y = initial_guess[0:2]
         self.x = x
         self.y = y
     
@@ -52,13 +54,13 @@ class LagrangeMultiplier(ProblemInterface):
     grad_L = [grad_f(x) + l*grad_g(x), g(x)]
     hessian_L = [
         [hessian_f(x)+l*hessian_g(x), grad_g(x)'],
-        [grad_g(x), zeros]
+        [grad_g(x), [0.0]]
     ]
     """
-    def __init__(self, f_x, g_x, lamb, is_uneq_constr=False):
-        self.f_x = f_x
-        self.g_x = g_x
-        self.lamb = lamb
+    def __init__(self, f_x: ProblemInterface, g_x: ProblemInterface, initial_guess: np.array, is_uneq_constr=False):
+        self.f_x = f_x(initial_guess)
+        self.g_x = g_x(initial_guess)
+        self.lamb = initial_guess[-1]
         self.is_uneq_constr = is_uneq_constr
     
     def __repr__(self) -> str:
@@ -86,10 +88,10 @@ class LagrangeMultiplier(ProblemInterface):
             self.lamb += d_x[-1]
     
 class Problem(ProblemInterface):
-    def __init__(self, x: float, y: float, lamb: float):
-        self.object_func = ObjectFunction(x, y)
-        self.eq_constr = EqConstraint(x, y)
-        self.lamb = lamb
+    def __init__(self, initial_guess: np.array):
+        self.object_func = FunctionQuadratic(initial_guess)
+        self.eq_constr = EqConstraint(initial_guess)
+        self.lamb = initial_guess[-1]
     
     def __repr__(self) -> str:
         return self.object_func.__repr__() +"+ lambda("+str(self.lamb)+")*"+self.eq_constr.__repr__()
@@ -115,7 +117,8 @@ class Problem(ProblemInterface):
         self.lamb += d_x[2]
 
 class ProblemLegacy(ProblemInterface):
-    def __init__(self, x: float, y: float, lamb: float):
+    def __init__(self, initial_guess: np.array):
+        x, y, lamb = initial_guess[0:3]
         self.x = x
         self.y = y
         self.lamb = lamb
@@ -163,10 +166,8 @@ if __name__ == "__main__":
     x^2y - 3 = 0
     
     """
-    # problem = Problem(0.1, 0.1, 0.0)
-    # NewtonsMethod(problem)
-    pb = Problem(1.0, 1.0, 1.0)
-    pb_legacy = ProblemLegacy(1.0, 1.0, 1.0)
+    pb = Problem(np.ones(3))
+    pb_legacy = ProblemLegacy(np.ones(3))
     print(pb.eval())
     print("legacy", pb_legacy.eval())
     print(pb.grad())
@@ -181,7 +182,7 @@ if __name__ == "__main__":
     NewtonsMethod(pb)
 
     print("----")
-    pb_l = LagrangeMultiplier(ObjectFunction(1.0, 1.0), EqConstraint(1.0, 1.0), 1.0)
+    pb_l = LagrangeMultiplier(FunctionQuadratic, EqConstraint, np.ones(3), False)
     print(pb_l.eval())
     print(pb_l.grad())
     print(pb_l.hessian())
