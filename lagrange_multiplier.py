@@ -144,6 +144,61 @@ class ProblemLegacy(ProblemInterface):
         self.y = self.y + x[1]
         self.lamb = self.lamb + x[2]
 
+class MultVectorWithFunction(ProblemInterface):
+    """
+    get gradient and hessian of this kind of function.
+    c(l_1, l_2, X) = l_1 * g_1(X) + l_2 * g_2(X)
+    grad_c = [l_1*grad_g_1(X) + l_2*grad_g_2(X), g_1(X), g_2(X)]
+    hessian_c = blocked[
+        [l_1*hessian_g_1(X) + l_2*hessian_g_2(X)]   [grad_g_1(X)]   [grad_g_2(X)]
+        [grad_g_1(X)]                               [0]             [0]
+        [grad_g_2(X)]                               [0]             [0]
+    ]
+    """
+    def __init__(self, vector: np.array, problems: np.array):
+        self.vector = vector
+        self.problems = problems
+    
+    def eval(self):
+        problems_eval = np.array([pb.eval() for pb in self.problems])
+        return self.vector.dot(problems_eval)
+    
+    def grad(self):
+        problems_grad_X = self.vector.dot(np.array([pb.grad() for pb in self.problems]))
+        # print(problems_grad_X)
+        return np.concatenate([problems_grad_X, np.array([pb.eval() for pb in self.problems])])
+    
+    def hessian(self):
+        problems_hessian = self.vector.dot(np.array([pb.hessian() for pb in self.problems]))
+        print(problems_hessian)
+        problems_grad = np.array([pb.grad() for pb in self.problems])
+        print(problems_grad)
+        return np.block([
+            [problems_hessian, problems_grad],
+            [problems_grad.transpose(), np.zeros((problems_grad.shape[1], problems_grad.shape[1]))]
+        ])
+
+    def update_x(self, d_x: np.array):
+        print(self.vector)
+        for pb in self.problems:
+            pb.update_x(d_x)
+        self.vector += d_x[self.vector.size:]
+        print(self.vector)
+
+def Test(pb: ProblemInterface):
+    pb_legacy = ProblemLegacy(np.ones(3))
+    print(pb.eval())
+    print("legacy", pb_legacy.eval())
+    print(pb.grad())
+    print("legacy", pb_legacy.grad())
+    print(pb.hessian())
+    print("legacy", pb_legacy.hessian())
+    pb.update_x(np.ones(3))
+    pb_legacy.update_x(np.ones(3))
+    print(pb.eval())
+    print("legacy", pb_legacy.eval())
+    NewtonsMethod(pb)
+
 if __name__ == "__main__":
     """
     Problem description:
@@ -166,24 +221,12 @@ if __name__ == "__main__":
     x^2y - 3 = 0
     
     """
-    pb = Problem(np.ones(3))
-    pb_legacy = ProblemLegacy(np.ones(3))
-    print(pb.eval())
-    print("legacy", pb_legacy.eval())
-    print(pb.grad())
-    print("legacy", pb_legacy.grad())
-    print(pb.hessian())
-    print("legacy", pb_legacy.hessian())
-    pb.update_x(np.ones(3))
-    pb_legacy.update_x(np.ones(3))
-    print(pb.eval())
-    print("legacy", pb_legacy.eval())
-
-    NewtonsMethod(pb)
-
-    print("----")
-    pb_l = LagrangeMultiplier(FunctionQuadratic, EqConstraint, np.ones(3), False)
-    print(pb_l.eval())
-    print(pb_l.grad())
-    print(pb_l.hessian())
-    NewtonsMethod(pb_l)
+    # pb = Problem(np.ones(3))
+    # Test(pb)
+    # pb = LagrangeMultiplier(FunctionQuadratic, EqConstraint, np.ones(3), False)
+    # Test(pb)
+    a = MultVectorWithFunction(np.ones(2), np.array([EqConstraint(np.ones(2)), EqConstraint(np.ones(2))]))
+    print(a.eval())
+    print(a.grad())
+    print(a.hessian())
+    a.update_x(np.array([0,0,1,0]))
