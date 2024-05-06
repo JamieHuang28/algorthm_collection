@@ -167,6 +167,8 @@ if __name__ == "__main__":
     
     """
     pb = Problem(np.ones(3))
+
+    # verify the problem definition by comparing primative functions with ProblemLegacy
     pb_legacy = ProblemLegacy(np.ones(3))
     print(pb.eval())
     print("legacy", pb_legacy.eval())

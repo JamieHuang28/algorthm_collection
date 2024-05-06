@@ -5,6 +5,10 @@ def f_prime(x, a, b):
     return 2 * a * x + b
 
 def newtons_method(a, b, c, initial_guess=0, tolerance=1e-7, max_iterations=1000):
+    """
+    The basic form of newtons method without complacated abstract programming.
+    It show you the mechanism of newtons-method
+    """
     x_n = initial_guess
     for iter in range(max_iterations):
         # Calculate the value of the derivative at x_n
@@ -51,7 +55,7 @@ class QuadFunc:
     def partial2(self, x: np.array):
         return np.eye(np.shape(x)[0]) * 2.0
 
-def newtons_method(func : QuadFunc, initial_guess: np.array, tolerance=1e-7, max_iterations=1000):
+def newtons_method_for_quad(func : QuadFunc, initial_guess: np.array, tolerance=1e-7, max_iterations=1000):
     x_n = initial_guess
     for iter in range(max_iterations):
         g = func.partial(x_n)
@@ -73,7 +77,7 @@ def example2():
     print(qf.partial(X))
     print(qf.partial2(X))
     print(qf.partial(X) / qf.partial2(X))
-    newtons_method(qf, X)
+    newtons_method_for_quad(qf, X)
 
 from abc import ABC, abstractclassmethod
 
@@ -129,7 +133,7 @@ class QuadProblem(ProblemInterface):
         self.x_n = self.x_n + d_x
 
 
-def exampleNewtons():
+def example3():
     problem = QuadProblem(np.array([1.0, 2.0]))
     print(problem.eval())
     print(problem.grad())
@@ -141,6 +145,9 @@ def exampleNewtons():
     NewtonsMethod(problem)
 
 def GradDescent(problem: ProblemInterface, step, tolerance=1e-7, max_iterations=1000):
+    """
+    Additional introduction to gradient-descent method for comparision with newtons-method
+    """
     for iter in range(max_iterations):
         grad = problem.grad()
         print(f"{iter}: grad = {grad}")
@@ -155,10 +162,12 @@ def GradDescent(problem: ProblemInterface, step, tolerance=1e-7, max_iterations=
     print(f"maximum reached at {problem.x_n}, value = {problem.eval()}")
     return problem.x_n
 
-def exampleGradDescent():
+def example4():
     problem = QuadProblem(np.array([1.0, 2.0]))
     GradDescent(problem, 1e-1)
     
 if __name__ == "__main__":
-    exampleNewtons()
-        
+    # example1()
+    # example2()
+    example3()
+    # example4()        
